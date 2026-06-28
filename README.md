@@ -34,6 +34,16 @@ streamlit run app.py
 http://localhost:8501
 ```
 
+## 觀課表網址
+
+本機使用網址：
+
+```text
+http://localhost:8501
+```
+
+這是本機網址，只能在執行此專案的電腦上開啟。若要讓其他人也能使用，請將專案部署到 Streamlit Cloud 或其他支援 Streamlit 的平台。
+
 ## GitHub 安全提醒
 
 本版本不需要 API Key。若資料夾中曾經有 `.streamlit/secrets.toml`，請不要上傳到 GitHub。
