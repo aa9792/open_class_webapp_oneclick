@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>教師觀課紀錄表產生器</title>
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #d7dee8;
+      --panel: #f8fafc;
+      --primary: #245b73;
+      --accent: #d7833b;
+      --soft: #eef6f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: var(--ink);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+    header {
+      background: linear-gradient(135deg, #f8fbfd 0%, #eef6f7 100%);
+      border-bottom: 1px solid var(--line);
+      padding: 28px min(6vw, 72px);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: 0;
+    }
+    header p { margin: 0; color: var(--muted); }
+    main {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 22px auto 60px;
+    }
+    section {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      margin: 16px 0;
+    }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    h3 { margin: 20px 0 10px; font-size: 18px; }
+    .notice {
+      border-left: 4px solid var(--accent);
+      background: #fff7ed;
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: #5a3b1d;
+      margin: 10px 0 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 8px 0 6px;
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      padding: 10px 11px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+    }
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+    input[type="file"] {
+      background: var(--panel);
+      border-style: dashed;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    button {
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
+      padding: 11px 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: white;
+      color: var(--primary);
+    }
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab {
+      border: 1px solid #c9d7df;
+      background: #eaf2f5;
+      color: #245b73;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-weight: 800;
+    }
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin: 10px 0 16px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px;
+      vertical-align: top;
+    }
+    th {
+      background: #edf3f6;
+      text-align: left;
+    }
+    td.small, th.small { width: 110px; }
+    .status {
+      color: var(--muted);
+      margin-top: 8px;
+      min-height: 1.6em;
+    }
+    .hide { display: none; }
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      section { padding: 16px; }
+      table { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>教師觀課紀錄表產生器</h1>
+    <p>免 API Key。上傳 DOCX/TXT 或貼上教案內容，在瀏覽器中產生附表2至附表5，並下載 Word 可開啟的表件。</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>一、基本資料</h2>
+      <div class="grid">
+        <div><label for="school">學校</label><input id="school" value="基隆市港西國小"></div>
+        <div><label for="teacher">授課教師</label><input id="teacher"></div>
+        <div><label for="observer">觀課教師</label><input id="observer"></div>
+        <div><label for="className">教學班級</label><input id="className"></div>
+        <div><label for="subjectArea">教學領域</label><input id="subjectArea"></div>
+        <div><label for="unitName">教學單元</label><input id="unitName"></div>
+        <div><label for="lessonMinutes">教學時間</label><input id="lessonMinutes" value="80分鐘"></div>
+        <div><label for="periodTime">觀察時間／節次</label><input id="periodTime"></div>
+        <div><label for="meetingMinutes">觀察後會談時間</label><input id="meetingMinutes" value="40分鐘"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>二、上傳或貼上教案</h2>
+      <div class="notice">靜態 HTML 版所有資料都在你的瀏覽器中處理，不會送到伺服器。DOCX 讀取需使用瀏覽器載入的開源套件 Mammoth；若讀取不完整，可直接把教案文字貼到下方。</div>
+      <label for="lessonFile">教案檔案 DOCX／TXT</label>
+      <input id="lessonFile" type="file" accept=".docx,.txt,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      <label for="lessonText">教案文字</label>
+      <textarea id="lessonText" placeholder="可上傳檔案自動帶入，也可以直接貼上教案內容。"></textarea>
+      <label for="observationNotes">觀課者補充筆記（選填）</label>
+      <textarea id="observationNotes" placeholder="例如：學生能依教師提問分享生活經驗；小組討論時多數學生能參與，但部分學生需要教師提醒才能聚焦任務。"></textarea>
+      <div class="actions">
+        <button id="generateBtn">產生觀課紀錄初稿</button>
+        <button class="secondary" id="blankBtn">建立空白表件</button>
+        <button class="secondary" id="clearBtn">清空重新開始</button>
+      </div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section id="resultSection" class="hide">
+      <h2>三、檢查與修改</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="app2">附表2 共同備課</button>
+        <button class="tab" data-tab="app3">附表3 觀課紀錄</button>
+        <button class="tab" data-tab="app4">附表4 自我省思</button>
+        <button class="tab" data-tab="app5">附表5 議課紀錄</button>
+      </div>
+
+      <div id="app2" class="panel active"></div>
+      <div id="app3" class="panel"></div>
+      <div id="app4" class="panel"></div>
+      <div id="app5" class="panel"></div>
+
+      <div class="actions">
+        <button id="downloadBtn">下載 Word 表件</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ratingOptions = ["優良", "普通", "可改進", "未呈現"];
+    const checklistItems = [
+      ["1-1", "能正確掌握教材內容"],
+      ["1-2", "能清楚呈現教材內容"],
+      ["1-3", "能有效連結學生舊經驗與新概念"],
+      ["2-1", "引起並維持學生學習動機"],
+      ["2-2", "善用提問促進學生思考"],
+      ["2-3", "提供學生參與、操作、討論或發表機會"],
+      ["2-4", "能依學生反應調整教學"],
+      ["3-1", "能清楚表達與說明"],
+      ["3-2", "能傾聽學生回應並給予適切回饋"],
+      ["4-1", "能運用評量了解學生學習成效"],
+      ["4-2", "能依評量結果提供回饋或補救"],
+      ["5-1", "維持良好班級秩序"],
+      ["5-2", "適時增強學生的良好表現"],
+      ["6-1", "營造安全、尊重與支持的學習氣氛"],
+      ["6-2", "促進學生合作與互相學習"]
+    ];
+    const selfCheckItems = [
+      "清楚呈現教材內容",
+      "運用有效教學技巧",
+      "應用良好溝通技巧",
+      "運用學習評量評估學習成效",
+      "維持良好的班級秩序以促進學習",
+      "營造積極的班級氣氛"
+    ];
+    const app2Fields = ["教材內容", "教學目標", "學生經驗", "教學活動", "教學評量方式", "觀察的工具和觀察焦點"];
+    const app5Fields = ["教學者教學優點與特色", "教學者教學待調整或改變之處", "對教學者之具體成長建議"];
+    let record = null;
+
+    const $ = (id) => document.getElementById(id);
+    const todayRoc = () => {
+      const now = new Date();
+      return `${now.getFullYear() - 1911} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 第   節`;
+    };
+    $("periodTime").value = todayRoc();
+
+    function cleanText(text) {
+      return String(text || "")
+        .replace(/\r/g, "\n")
+        .replace(/[ \t]+/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
+
+    function brief(text, limit = 220) {
+      const cleaned = cleanText(text).replace(/\n+/g, " ");
+      return cleaned.length > limit ? cleaned.slice(0, limit) + "..." : cleaned;
+    }
+
+    function missing(label) {
+      return `教案未明確提供「${label}」，請依實際資料補充。`;
+    }
+
+    function section(labels, text, maxChars = 1400) {
+      const normalized = cleanText(text);
+      const labelPattern = labels.map(escapeRegExp).join("|");
+      const stop = "教學目標|學習目標|教材內容|學習內容|教學活動|學習活動|教學流程|評量方式|教學評量|學生經驗|先備經驗|核心素養|教學方法|教學策略|教材與設備";
+      const re = new RegExp(`(?:^|\\n|\\|)\\s*(?:${labelPattern})\\s*[：:]?\\s*([\\s\\S]{8,${maxChars}}?)(?=\\n\\s*(?:${stop})\\s*[：:]|\\n\\s*\\|\\s*(?:${stop})|$)`);
+      const match = normalized.match(re);
+      return match ? cleanText(match[1].replace(/\|/g, " ")) : "";
+    }
+
+    function escapeRegExp(value) {
+      return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function tableLineValue(labels, text) {
+      const lines = cleanText(text).split(/\n+/);
+      for (const line of lines) {
+        const cells = line.split("|").map((x) => x.trim()).filter(Boolean);
+        for (let i = 0; i < cells.length; i++) {
+          if (labels.includes(cells[i].replace(/[：:]/g, "")) && cells[i + 1]) {
+            return cleanText(cells[i + 1]);
+          }
+          for (const label of labels) {
+            if (cells[i].startsWith(label) && cells[i].length > label.length + 1) {
+              return cleanText(cells[i].slice(label.length).replace(/^[：:]/, ""));
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    function parseOutline(text) {
+      const normalized = cleanText(text);
+      const unit = tableLineValue(["單元名稱", "教學單元", "單元主題", "課程名稱"], normalized)
+        || section(["單元名稱", "教學單元", "單元主題", "課程名稱"], normalized, 180);
+      const area = tableLineValue(["領域", "教學領域", "學習領域"], normalized)
+        || section(["教學領域", "學習領域"], normalized, 160);
+      const goals = section(["教學目標", "學習目標", "單元目標", "課程目標"], normalized, 1100)
+        || findGoalSentences(normalized);
+      const content = section(["教材內容", "學習內容", "授課內容"], normalized, 1100)
+        || findByKeywords(normalized, ["Bc-", "學習內容", "教材"]);
+      const activity = section(["教學活動內容及實施方式", "教學活動", "學習活動", "教學流程", "活動流程", "教學過程"], normalized, 3000)
+        || findActivity(normalized);
+      const assessment = section(["評量方式", "教學評量", "學習評量"], normalized, 900)
+        || findByKeywords(normalized, ["觀察", "口頭", "學習單", "實作", "評量"]);
+      const strategy = section(["教學方法與策略", "教學策略", "教學方法"], normalized, 900)
+        || findByKeywords(normalized, ["問題引導", "小組", "討論", "操作", "提問", "發表"]);
+      const prior = section(["學生經驗", "先備經驗", "起點行為"], normalized, 700);
+      return { unit, area, goals, content, activity, assessment, strategy, prior };
+    }
+
+    function findGoalSentences(text) {
+      return unique((text.match(/[^。！？\n]*(?:能|學生能)[^。！？\n]*(?:。|！|？)/g) || [])
+        .filter((line) => /理解|說明|使用|製作|完成|學會|認識/.test(line)))
+        .slice(0, 4)
+        .join(" ");
+    }
+
+    function findByKeywords(text, keywords) {
+      return unique(text.split(/\n+/)
+        .filter((line) => keywords.some((keyword) => line.includes(keyword)))
+        .map((line) => line.replace(/\|/g, " ").trim()))
+        .slice(0, 8)
+        .join(" ");
+    }
+
+    function findActivity(text) {
+      return unique(text.split(/\n+/)
+        .filter((line) => /活動|教師|學生|提問|討論|操作|實作|總結|反思/.test(line))
+        .map((line) => line.replace(/\|/g, " ").trim()))
+        .slice(0, 12)
+        .join(" ");
+    }
+
+    function unique(items) {
+      const seen = new Set();
+      const output = [];
+      for (const item of items) {
+        const cleaned = cleanText(item);
+        if (cleaned && !seen.has(cleaned)) {
+          seen.add(cleaned);
+          output.push(cleaned);
+        }
+      }
+      return output;
+    }
+
+    function activitySummary(activity) {
+      if (!activity) return "";
+      const parts = activity.split(/(?=引起動機|回顧與導入|活動\d+[：:]|課堂總結|總結與反思)/).map((x) => x.trim()).filter(Boolean);
+      const picked = parts.length ? parts : activity.split(/[。；;]/).map((x) => x.trim()).filter(Boolean);
+      return picked.slice(0, 5).map((item) => {
+        const title = item.match(/^(引起動機|回顧與導入|活動\d+[：:][^。；;\n]{0,35}|課堂總結[^。；;\n]{0,20}|總結與反思)/);
+        return title ? title[0] : brief(item, 36);
+      }).join("、");
+    }
+
+    function getMetadata() {
+      return {
+        school: $("school").value.trim(),
+        teacher: $("teacher").value.trim(),
+        observer: $("observer").value.trim(),
+        className: $("className").value.trim(),
+        subjectArea: $("subjectArea").value.trim(),
+        unitName: $("unitName").value.trim(),
+        lessonMinutes: $("lessonMinutes").value.trim(),
+        periodTime: $("periodTime").value.trim(),
+        meetingMinutes: $("meetingMinutes").value.trim()
+      };
+    }
+
+    function createRecord(outline = {}, notes = "") {
+      const metadata = getMetadata();
+      if (!metadata.subjectArea && outline.area) $("subjectArea").value = brief(outline.area, 70);
+      if (!metadata.unitName && outline.unit) $("unitName").value = brief(outline.unit, 70);
+      Object.assign(metadata, getMetadata());
+      const goals = outline.goals || "";
+      const content = outline.content || "";
+      const activity = outline.activity || "";
+      const assessment = outline.assessment || "";
+      const strategy = outline.strategy || "";
+      const prior = outline.prior || "";
+      const summary = activitySummary(activity);
+      const focus = [
+        goals ? `• 對照學習目標觀察學生是否能達成：${brief(goals, 160)}` : `• ${missing("學習目標／教學目標")}`,
+        activity ? `• 觀察學生在教案活動中的參與與表現：${brief(summary || activity, 180)}` : `• ${missing("教學活動／學習活動")}`,
+        assessment ? `• 蒐集教案評量證據：${brief(assessment, 130)}` : `• ${missing("評量方式／教學評量")}`
+      ].join("\n");
+
+      const ratings = {};
+      const evidence = {};
+      checklistItems.forEach(([code]) => {
+        const source = sourceForCode(code, { goals, content, activity, assessment, strategy });
+        ratings[code] = source ? (["1-1", "2-1", "2-3", "4-1"].includes(code) ? "優良" : "普通") : "未呈現";
+        evidence[code] = source ? `依教案內容：${brief(source, 170)}` : missing("相關觀課證據");
+      });
+
+      const selfRatings = {};
+      selfCheckItems.forEach((item) => {
+        if (item.includes("教材")) selfRatings[item] = content ? "普通" : "未呈現";
+        else if (item.includes("評量")) selfRatings[item] = assessment ? "普通" : "未呈現";
+        else if (item.includes("溝通") || item.includes("教學技巧")) selfRatings[item] = activity ? "普通" : "未呈現";
+        else selfRatings[item] = "未呈現";
+      });
+
+      return {
+        basicInfo: metadata,
+        appendix2: {
+          "教材內容": content ? bulletize(content, ["學習內容", "教材與設備", "教材內容"]) : missing("教材內容／學習內容"),
+          "教學目標": goals ? bulletize(goals, ["學習目標", "教學目標"]) : missing("學習目標／教學目標"),
+          "學生經驗": prior ? bulletize(prior, ["學生經驗", "先備經驗"]) : "• 可依學生既有生活經驗、先備知識與課前表現補充。",
+          "教學活動": activity ? bulletize(activity, ["教學活動", "學習活動"]) : missing("教學活動／學習活動"),
+          "教學評量方式": assessment ? bulletize(assessment, ["評量方式", "教學評量"]) : missing("評量方式／教學評量"),
+          "觀察的工具和觀察焦點": focus
+        },
+        appendix3: { ratings, evidence },
+        appendix4: {
+          selfRatings,
+          reflection: reflectionText({ goals, content, activity, assessment, strategy })
+        },
+        appendix5: {
+          "教學者教學優點與特色": discussionStrengths({ goals, activity, strategy }),
+          "教學者教學待調整或改變之處": discussionAdjustments({ assessment, activity }),
+          "對教學者之具體成長建議": discussionGrowth({ goals, activity, assessment, notes })
+        }
+      };
+    }
+
+    function sourceForCode(code, data) {
+      if (code.startsWith("1")) return data.content || data.goals;
+      if (code.startsWith("2")) return data.activity || data.strategy;
+      if (code.startsWith("3")) return data.strategy || data.activity;
+      if (code.startsWith("4")) return data.assessment;
+      if (code.startsWith("5") || code.startsWith("6")) return data.activity || data.strategy;
+      return "";
+    }
+
+    function bulletize(text) {
+      const chunks = cleanText(text).split(/(?:\n+|(?<=。)|(?<=；)|(?<=;))/).map((x) => x.trim()).filter(Boolean);
+      const items = unique(chunks).slice(0, 8);
+      return items.length ? items.map((item) => `• ${item}`).join("\n") : `• ${brief(text, 320)}`;
+    }
+
+    function reflectionText({ goals, content, activity, assessment, strategy }) {
+      const paragraphs = [];
+      if (goals) paragraphs.push(`本課以「${brief(goals, 140)}」為主要學習目標，課程設計能扣合學生經驗，並引導學生逐步理解核心概念。`);
+      if (content || activity) paragraphs.push(`從教案安排來看，教材內容聚焦於「${brief(content, 120) || "教案所列內容"}」，並透過${activitySummary(activity) || "教案所列教學活動"}促進學生參與、討論與實作。`);
+      paragraphs.push(`教學策略包含「${brief(strategy, 120) || "教案未明確提供"}」，評量方式包含「${brief(assessment, 120) || "教案未明確提供"}」。課後可進一步檢視學生是否能以自己的語言說明學習重點，並依實際學習證據調整提問層次、操作時間與回饋方式。`);
+      return paragraphs.join("\n\n");
+    }
+
+    function discussionStrengths({ goals, activity, strategy }) {
+      const parts = [];
+      if (goals) parts.push(`本課教學目標明確，能聚焦於${brief(goals, 150)}`);
+      if (activity) parts.push(`教學活動以${activitySummary(activity) || brief(activity, 120)}為主軸，提供學生參與與表達的機會`);
+      if (strategy) parts.push(`教案安排${brief(strategy, 120)}等策略，有助於引導學生投入學習`);
+      return parts.length ? `${parts.join("；")}。整體而言，課程能將學習內容與學生經驗連結。` : missing("教學優點與特色");
+    }
+
+    function discussionAdjustments({ assessment, activity }) {
+      const parts = [];
+      parts.push(assessment ? `教案已規劃${brief(assessment, 140)}等評量方式，議課時可檢視評量是否能充分呈現學生學習成效` : missing("評量方式／教學評量"));
+      if (activity) parts.push("建議留意各活動時間分配、活動轉換銜接、學生任務理解與教師巡視回饋是否足夠清楚");
+      parts.push("若學生反應差異較大，可再補強任務提示、同儕分享或概念檢核。");
+      return parts.join("。");
+    }
+
+    function discussionGrowth({ goals, activity, assessment, notes }) {
+      const parts = ["建議後續可將觀課重點放在學生是否能達成教案學習目標，以及能否在活動後說明自己的理解與判斷。"];
+      if (activity) parts.push(`觀課時可對照教案活動「${activitySummary(activity) || brief(activity, 120)}」，記錄學生在討論、操作、發表與回應中的具體表現。`);
+      if (assessment) parts.push(`議課時可再檢視「${brief(assessment, 120)}」是否足以回應學習目標。`);
+      if (notes) parts.push(`觀課者補充筆記指出：${brief(notes, 160)}`);
+      return parts.join("\n");
+    }
+
+    function renderAll() {
+      renderAppendix2();
+      renderAppendix3();
+      renderAppendix4();
+      renderAppendix5();
+      $("resultSection").classList.remove("hide");
+    }
+
+    function renderAppendix2() {
+      $("app2").innerHTML = app2Fields.map((field) => `
+        <label for="app2_${field}">${field}</label>
+        <textarea id="app2_${field}" data-app2="${field}">${escapeHtml(record.appendix2[field] || "")}</textarea>
+      `).join("");
+    }
+
+    function renderAppendix3() {
+      const rows = checklistItems.map(([code, desc]) => `
+        <tr>
+          <td class="small">${code}</td>
+          <td>${escapeHtml(desc)}</td>
+          <td class="small">${selectHtml(`rating_${code}`, record.appendix3.ratings[code])}</td>
+          <td><textarea data-evidence="${code}">${escapeHtml(record.appendix3.evidence[code] || "")}</textarea></td>
+        </tr>
+      `).join("");
+      $("app3").innerHTML = `
+        <table>
+          <thead><tr><th class="small">代碼</th><th>檢核重點</th><th class="small">建議等第</th><th>觀察證據／備註</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function renderAppendix4() {
+      const checks = selfCheckItems.map((item) => `
+        <tr>
+          <td>${escapeHtml(item)}</td>
+          <td class="small">${selectHtml(`self_${item}`, record.appendix4.selfRatings[item])}</td>
+        </tr>
+      `).join("");
+      $("app4").innerHTML = `
+        <table><thead><tr><th>檢核項目</th><th class="small">自評</th></tr></thead><tbody>${checks}</tbody></table>
+        <label for="reflection">◎教學省思</label>
+        <textarea id="reflection">${escapeHtml(record.appendix4.reflection || "")}</textarea>
+      `;
+    }
+
+    function renderAppendix5() {
+      $("app5").innerHTML = app5Fields.map((field) => `
+        <label for="app5_${field}">${field}</label>
+        <textarea id="app5_${field}" data-app5="${field}">${escapeHtml(record.appendix5[field] || "")}</textarea>
+      `).join("");
+    }
+
+    function selectHtml(id, selected) {
+      return `<select id="${escapeHtml(id)}">${ratingOptions.map((option) => `<option ${option === selected ? "selected" : ""}>${option}</option>`).join("")}</select>`;
+    }
+
+    function collectEdits() {
+      if (!record) return;
+      record.basicInfo = getMetadata();
+      document.querySelectorAll("[data-app2]").forEach((el) => record.appendix2[el.dataset.app2] = el.value);
+      document.querySelectorAll("[id^='rating_']").forEach((el) => record.appendix3.ratings[el.id.replace("rating_", "")] = el.value);
+      document.querySelectorAll("[data-evidence]").forEach((el) => record.appendix3.evidence[el.dataset.evidence] = el.value);
+      document.querySelectorAll("[id^='self_']").forEach((el) => record.appendix4.selfRatings[el.id.replace("self_", "")] = el.value);
+      const reflection = $("reflection");
+      if (reflection) record.appendix4.reflection = reflection.value;
+      document.querySelectorAll("[data-app5]").forEach((el) => record.appendix5[el.dataset.app5] = el.value);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function nl2br(value) {
+      return escapeHtml(value).replace(/\n/g, "<br>");
+    }
+
+    async function readFile(file) {
+      const name = file.name.toLowerCase();
+      if (name.endsWith(".txt")) return await file.text();
+      if (name.endsWith(".docx")) {
+        if (!window.mammoth) throw new Error("DOCX 讀取套件尚未載入，請稍後再試，或改貼上教案文字。");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        return result.value || "";
+      }
+      throw new Error("靜態 HTML 版目前支援 DOCX 與 TXT。PDF 請先複製文字後貼到教案文字欄位。");
+    }
+
+    $("lessonFile").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        $("status").textContent = "正在讀取檔案...";
+        $("lessonText").value = await readFile(file);
+        $("status").textContent = "已讀取檔案，可按「產生觀課紀錄初稿」。";
+      } catch (error) {
+        $("status").textContent = error.message;
+      }
+    });
+
+    $("generateBtn").addEventListener("click", () => {
+      const text = $("lessonText").value.trim();
+      if (!text) {
+        $("status").textContent = "請先上傳教案或貼上教案文字。";
+        return;
+      }
+      const outline = parseOutline(text);
+      record = createRecord(outline, $("observationNotes").value.trim());
+      renderAll();
+      $("status").textContent = "已產生附表2至附表5初稿，請往下檢查與修改。";
+    });
+
+    $("blankBtn").addEventListener("click", () => {
+      record = createRecord({}, $("observationNotes").value.trim());
+      renderAll();
+      $("status").textContent = "已建立空白表件，請往下填寫附表2至附表5。";
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+      if (!confirm("確定要清空目前內容嗎？")) return;
+      document.querySelectorAll("input:not(#school):not(#lessonMinutes):not(#meetingMinutes), textarea").forEach((el) => el.value = "");
+      $("periodTime").value = todayRoc();
+      $("resultSection").classList.add("hide");
+      $("status").textContent = "";
+      record = null;
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
+        tab.classList.add("active");
+        $(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    $("downloadBtn").addEventListener("click", () => {
+      collectEdits();
+      const html = buildWordHtml(record);
+      const blob = new Blob(["\ufeff", html], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const unit = (record.basicInfo.unitName || "公開觀課紀錄").replace(/[\\/:*?"<>|]/g, "").slice(0, 30);
+      link.href = url;
+      link.download = `${unit || "公開觀課紀錄"}_附表2至5.doc`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    function buildWordHtml(data) {
+      const b = data.basicInfo;
+      const style = `
+        <style>
+          body { font-family: 標楷體, DFKai-SB, serif; font-size: 12pt; }
+          h1, h2 { text-align: center; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; }
+          th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+          th { background: #d9d9d9; }
+          .page { page-break-before: always; }
+          .label { width: 24%; background: #d9d9d9; font-weight: bold; }
+          .sign { margin-top: 20px; }
+        </style>
+      `;
+      return `<!doctype html><html><head><meta charset="utf-8">${style}</head><body>
+        ${wordAppendix2(data, b)}
+        <div class="page">${wordAppendix3(data, b)}</div>
+        <div class="page">${wordAppendix4(data, b)}</div>
+        <div class="page">${wordAppendix5(data, b)}</div>
+      </body></html>`;
+    }
+
+    function wordTitle(no, title) {
+      return `<p><b>附表 ${no}：</b></p><h2>基隆市 114 學年度學校辦理校長及教師公開授課</h2><h2>${title}</h2>`;
+    }
+
+    function basicTable(b) {
+      return `<table>
+        <tr><th>教學時間</th><td>${escapeHtml(b.lessonMinutes)}</td><th>教學班級</th><td>${escapeHtml(b.className)}</td></tr>
+        <tr><th>教學領域</th><td>${escapeHtml(b.subjectArea)}</td><th>教學單元</th><td>${escapeHtml(b.unitName)}</td></tr>
+        <tr><th>教 學 者</th><td>${escapeHtml(b.teacher)}</td><th>觀 察 者</th><td>${escapeHtml(b.observer)}</td></tr>
+        <tr><th>觀察時間</th><td>${escapeHtml(b.periodTime)}</td><th>觀察後會談時間</th><td>${escapeHtml(b.meetingMinutes)}</td></tr>
+      </table>`;
+    }
+
+    function wordAppendix2(data, b) {
+      const rows = app2Fields.map((field) => `<tr><td class="label">${escapeHtml(field)}：</td><td>${nl2br(data.appendix2[field] || "")}</td></tr>`).join("");
+      return `${wordTitle("2", "共同備課紀錄表")}${basicTable(b)}<table>${rows}</table><p class="sign">授課教師：_____________________　　觀課教師：_____________________</p>`;
+    }
+
+    function wordAppendix3(data, b) {
+      const rows = checklistItems.map(([code, desc]) => {
+        const selected = data.appendix3.ratings[code] || "普通";
+        return `<tr><td>${escapeHtml(code)}</td><td>${escapeHtml(desc)}</td>${ratingOptions.map((opt) => `<td style="text-align:center">${selected === opt ? "■" : "□"}</td>`).join("")}</tr>`;
+      }).join("");
+      const notes = checklistItems.map(([code, desc]) => `<p><b>${escapeHtml(code)} ${escapeHtml(desc)}：</b>${nl2br(data.appendix3.evidence[code] || "")}</p>`).join("");
+      return `${wordTitle("3", "觀課紀錄表")}${basicTable(b)}<table><tr><th>代碼</th><th>檢核重點</th><th>優良</th><th>普通</th><th>可改進</th><th>未呈現</th></tr>${rows}</table><h3>觀察證據／備註</h3>${notes}<p class="sign">授課教師：_____________________　　觀課教師：_____________________</p>`;
+    }
+
+    function wordAppendix4(data, b) {
+      const rows = selfCheckItems.map((item, index) => {
+        const selected = data.appendix4.selfRatings[item] || "普通";
+        return `<tr><td>${index + 1}</td><td>${escapeHtml(item)}</td>${ratingOptions.map((opt) => `<td style="text-align:center">${selected === opt ? "■" : "□"}</td>`).join("")}</tr>`;
+      }).join("");
+      return `${wordTitle("4", "教學自我省思檢核表")}<p>授課教師姓名：${escapeHtml(b.teacher)}　教學班級：${escapeHtml(b.className)}　教學領域：${escapeHtml(b.subjectArea)}</p><p>教學單元名稱：${escapeHtml(b.unitName)}</p><table><tr><th>序號</th><th>檢核項目</th><th>優良</th><th>普通</th><th>可改進</th><th>未呈現</th></tr>${rows}</table><h3>◎教學省思：</h3><p>${nl2br(data.appendix4.reflection || "")}</p><p class="sign">授課教師：_____________________　　觀課教師：_____________________</p>`;
+    }
+
+    function wordAppendix5(data, b) {
+      const rows = app5Fields.map((field, index) => `<h3>${["一", "二", "三"][index]}、${escapeHtml(field)}：</h3><p>${nl2br(data.appendix5[field] || "")}</p>`).join("");
+      return `${wordTitle("5", "議課紀錄表")}${basicTable(b)}${rows}<p class="sign">授課教師：_____________________　　觀課教師：_____________________</p>`;
+    }
+  </script>
+</body>
+</html>

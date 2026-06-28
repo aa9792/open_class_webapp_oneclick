@@ -44,6 +44,10 @@ http://localhost:8501
 
 這是本機網址，只能在執行此專案的電腦上開啟。若要讓其他人也能使用，請將專案部署到 Streamlit Cloud 或其他支援 Streamlit 的平台。
 
+## HTML 分享版
+
+專案根目錄提供 `index.html` 靜態網頁版，可部署到 GitHub Pages 後用網址分享。靜態版不需要 API Key，也不需要伺服器；支援上傳 DOCX/TXT 或貼上教案文字，產生附表 2 至附表 5，並下載 Word 可開啟的 `.doc` 表件。
+
 ## GitHub 安全提醒
 
 本版本不需要 API Key。若資料夾中曾經有 `.streamlit/secrets.toml`，請不要上傳到 GitHub。
