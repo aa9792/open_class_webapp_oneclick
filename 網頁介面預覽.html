@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>教師觀課紀錄表產生器｜免 API Key 介面預覽</title>
+  <style>
+    body{margin:0;background:#f6f7fb;color:#1f2937;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;}
+    header{background:linear-gradient(135deg,#163a5f,#2e7d8f);color:white;padding:36px 8vw;}
+    header h1{margin:0;font-size:34px;letter-spacing:.04em;}
+    header p{margin:12px 0 0;opacity:.92;font-size:17px;}
+    main{padding:28px 8vw 52px;}
+    .card{background:white;border-radius:18px;padding:24px;margin:18px 0;box-shadow:0 10px 30px rgba(31,41,55,.08);}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+    label{display:block;font-weight:700;margin-bottom:8px;color:#334155;}
+    input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#fff;font-size:15px;}
+    textarea{min-height:92px;resize:vertical;}
+    .upload{border:2px dashed #8fb9c7;background:#f0f9fb;border-radius:16px;padding:24px;text-align:center;color:#2e6270;}
+    .btn{display:inline-block;background:#1f6f8b;color:white;border:0;border-radius:999px;padding:13px 24px;font-weight:800;margin-top:16px;}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 18px;}
+    .tab{padding:10px 14px;border-radius:999px;background:#e5eef3;color:#21566d;font-weight:700;}
+    .tab.active{background:#1f6f8b;color:#fff;}
+    table{width:100%;border-collapse:collapse;background:#fff;font-size:14px;}
+    th,td{border:1px solid #d7dee8;padding:10px;vertical-align:top;}
+    th{background:#eef3f7;text-align:left;}
+    .note{background:#fff7ed;border-left:6px solid #f59e0b;padding:14px;border-radius:10px;}
+    @media (max-width:900px){.grid{grid-template-columns:1fr;} header h1{font-size:26px;}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📘 教師觀課紀錄表產生器</h1>
+    <p>免 API Key。上傳教案後，系統整理附表2至附表5可修改初稿，最後下載 Word。</p>
+  </header>
+  <main>
+    <section class="card">
+      <h2>一、基本資料</h2>
+      <div class="grid">
+        <div><label>授課教師</label><input placeholder="例：曾勝鴻"></div>
+        <div><label>觀課教師</label><input placeholder="例：許畯傑"></div>
+        <div><label>教學班級</label><input placeholder="例：301"></div>
+        <div><label>教學領域</label><input placeholder="例：綜合活動領域"></div>
+        <div><label>教學單元</label><input placeholder="例：探索生活中的電能祕密"></div>
+        <div><label>觀察時間／節次</label><input placeholder="例：115 年 3 月 10 日 第 6、7 節"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>二、上傳教案</h2>
+      <div class="upload">這裡是介面預覽，不具備上傳功能。<br>真正使用請執行「一鍵啟動網頁.bat」後，在 http://localhost:8501 上傳 DOCX／PDF／TXT 教案檔案。</div>
+      <label style="margin-top:18px">觀課者補充筆記</label>
+      <textarea placeholder="可補充學生實際反應、小組討論情形、教師提問與課堂軼事……"></textarea>
+      <button class="btn" disabled style="opacity:.6;cursor:not-allowed">✨ 預覽頁不能產生，請啟動正式網頁</button>
+    </section>
+
+    <section class="card">
+      <h2>三、網頁呈現結果，可直接修改</h2>
+      <div class="tabs">
+        <div class="tab active">附表2 共同備課</div>
+        <div class="tab">附表3 觀課紀錄</div>
+        <div class="tab">附表4 自我省思</div>
+        <div class="tab">附表5 議課紀錄</div>
+      </div>
+      <table>
+        <tr><th style="width:22%">欄位</th><th>系統整理初稿</th></tr>
+        <tr><td>教材內容</td><td>依教案內容整理課程重點，協助學生從生活情境理解學習概念。</td></tr>
+        <tr><td>教學目標</td><td>學生能透過觀察、討論與實作任務，說明課程核心概念並完成學習任務。</td></tr>
+        <tr><td>觀察焦點</td><td>可觀察學生投入程度、討論品質、教師提問引導與學習目標達成情形。</td></tr>
+      </table>
+      <p class="note">此檔是介面預覽；正式功能請部署 Streamlit 版本，老師端即可直接上傳與下載 Word。</p>
+      <button class="btn" disabled style="opacity:.6;cursor:not-allowed">⬇️ 預覽頁不能下載，請啟動正式網頁</button>
+    </section>
+  </main>
+</body>
+</html>
